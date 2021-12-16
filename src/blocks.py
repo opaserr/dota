@@ -6,14 +6,6 @@ import tensorflow as tf
 from tensorflow.keras import Sequential, layers
 from tensorflow_addons.layers import GroupNormalization
 
-def ws_reg(kernel):
-    """ Function for weight standardization"."""
-    kernel_mean = tf.math.reduce_mean(kernel, axis=[0, 1, 2], keepdims=True, name='kernel_mean')
-    kernel = kernel - kernel_mean
-    kernel_std = tf.keras.backend.std(kernel, axis=[0, 1, 2], keepdims=True)
-    kernel = kernel / (kernel_std + 1e-5)
-    #return kernel
-
 class ConvEncoder(layers.Layer):
     """ Learnable position embedding + initial projection."""
     def __init__(self, num_tokens, projection_dim, num_channels=64,
@@ -206,3 +198,12 @@ class TransformerEncoder(layers.Layer):
         y = self.norm2(x)
         y = self.mlp_network(y)
         return self.add([x,y])
+
+# Auxiliary functions
+def ws_reg(kernel):
+    """ Function for weight standardization"."""
+    kernel_mean = tf.math.reduce_mean(kernel, axis=[0, 1, 2], keepdims=True, name='kernel_mean')
+    kernel = kernel - kernel_mean
+    kernel_std = tf.keras.backend.std(kernel, axis=[0, 1, 2], keepdims=True)
+    kernel = kernel / (kernel_std + 1e-5)
+    #return kernel

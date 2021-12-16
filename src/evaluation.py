@@ -202,6 +202,8 @@ def error_analysis(model, testIDs, filename, scale, num_sections=1,
             for j in range(1, len(ticks)):
                 error_dist[i,j-1] = (absolute_error[ticks[j-1]:ticks[j],:,:]).mean()
 
+            error_dist[i,] = 100 * error_dist[i,]/ np.amax(ground_truth)
+
         progress_bar(i+1, num_IDs, prefix="Progress:", suffix="Complete")
 
     # Sort list and indexes

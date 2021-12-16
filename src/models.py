@@ -5,7 +5,7 @@ import numpy as np
 from tensorflow.keras import Sequential, layers, Model
 from .blocks import ConvEncoder, ConvDecoder, TransformerEncoder
 
-def multi_energy_model(num_tokens, input_shape, projection_dim,
+def dota_energies(num_tokens, input_shape, projection_dim,
     num_heads, num_transformers, kernel_size, dropout_rate=0.2,
     causal=True):
     """ Creates the transformer model for dose calculation using multiple

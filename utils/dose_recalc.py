@@ -3,7 +3,7 @@
 import h5py
 import json
 import numpy as np
-from ..src.models import multi_energy_model
+from ..src.models import dota_energies
 from ..src.preprocessing import DataRescaler
 from ..src.evaluation import gamma_analysis
 
@@ -21,7 +21,7 @@ scale = {'y_min':scaler.y_min, 'y_max':scaler.y_max,
         'e_min':70, 'e_max':220}
 
 # Define and load the model.
-transformer = multi_energy_model(
+transformer = dota_energies(
     num_tokens=param['num_tokens'],
     input_shape=param['data_shape'],
     projection_dim=param['projection_dim'],
@@ -68,5 +68,5 @@ for b in range(num_beams):
         doses[i,] = np.sum(outputs[ind[i]:ind[i+1],], axis=0)
 
     # Save beam doses to .h5 file
-    with h5py.File(path_outputs + str(b) + '.h5', 'r') as fh:
+    with h5py.File(path_outputs + str(b) + '_dota.h5', 'r') as fh:
         fh.create_dataset('dose', data=np.transpose(doses))

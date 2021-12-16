@@ -6,11 +6,9 @@
 import h5py
 import json
 import numpy as np
-import sys
-sys.path.append('../src')
-from models import multi_energy_model
-from preprocessing import DataRescaler
-from evaluation import gamma_analysis, error_analysis
+from ..src.models import dota_energies
+from ..src.preprocessing import DataRescaler
+from ..src.evaluation import gamma_analysis, error_analysis
 
 # Load model and data hyperparameters
 with open('./hyperparam.json', 'r') as hfile:
@@ -32,7 +30,7 @@ scale = {'y_min':scaler.y_min, 'y_max':scaler.y_max,
         'e_min':70, 'e_max':220}
 
 ## Define and load the transformer.
-transformer = multi_energy_model(
+transformer = dota_energies(
     num_tokens=param['num_tokens'],
     input_shape=param['data_shape'],
     projection_dim=param['projection_dim'],

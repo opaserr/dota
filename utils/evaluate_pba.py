@@ -5,17 +5,14 @@
 ## Import libraries and define auxiliary functions
 import h5py
 import numpy as np
-import sys
-sys.path.append('../src')
-from models import multi_energy_model
-from preprocessing import DataRescaler
-from evaluation import gamma_analysis
+from ..src.preprocessing import DataRescaler
+from ..src.evaluation import gamma_analysis, error_analysis
 
 # Prepare input data.
 path = '../data/training/'
 path_test = '../data/test/'
 path_weights = '../weights/weights.ckpt'
-filename_test = path_test + 'testMC.h5'
+filename_test = path_test + 'test.h5'
 filename_pba = path_test + 'testPBA.h5'
 with h5py.File(filename_test, 'r') as fh:
     testIDs = [*range(fh['geometry'].shape[-1])]

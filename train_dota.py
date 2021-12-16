@@ -8,7 +8,7 @@ import json
 import random
 import numpy as np
 from src.generators import DataGenerator
-from src.models import multi_energy_model
+from src.models import dota_energies
 from src.preprocessing import DataRescaler
 from tensorflow_addons.optimizers import LAMB
 from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
@@ -52,7 +52,7 @@ train_gen = DataGenerator(trainIDs, batch_size, filename, scale, num_energies=2)
 val_gen = DataGenerator(valIDs, batch_size, filename, scale, num_energies=1)
 
 ## Define and train the transformer.
-transformer = multi_energy_model(
+transformer = dota_energies(
     num_tokens=param['num_tokens'],
     input_shape=param['data_shape'],
     projection_dim=param['projection_dim'],

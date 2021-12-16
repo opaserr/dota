@@ -38,10 +38,10 @@ class DataGenerator(Sequence):
         # that is convolutionally friendly (e.g., (24, 24))
         with h5py.File(self.path, 'r') as fh:
             input_shape = tuple(reversed(fh[self.ikey].shape[:-1]))
-            self.input_dim = tuple(map(lambda i, j: i - j, a, (0,1,1)))
+            self.input_dim = tuple(map(lambda i, j: i - j, input_shape, (0,1,1)))
         with h5py.File(self.path, 'r') as fh:
             output_shape = tuple(reversed(fh[self.okey+'0'].shape[:-1]))
-            self.output_dim = tuple(map(lambda i, j: i - j, a, (0,1,1)))
+            self.output_dim = tuple(map(lambda i, j: i - j, output_shape, (0,1,1)))
 
         # If Height = Width rotate 90 degrees, else 180
         self.rotk = np.arange(4) if self.input_dim[-1]==self.input_dim[-2] else [0,2]
