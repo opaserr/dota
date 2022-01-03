@@ -6,10 +6,12 @@
 import h5py
 import json
 import random
+import sys
+sys.path.append('./src')
 import numpy as np
-from src.generators import DataGenerator
-from src.models import dota_energies
-from src.preprocessing import DataRescaler
+from generators import DataGenerator
+from models import dota_energies
+from preprocessing import DataRescaler
 from tensorflow_addons.optimizers import LAMB
 from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from tensorflow.config import list_physical_devices
@@ -20,7 +22,7 @@ print(list_physical_devices('GPU'))
 batch_size = 8
 num_epochs = 30
 learning_rate = 0.001
-weight_decay = 0.001
+weight_decay = 0.0001
 
 # Load model and data hyperparameters
 with open('./hyperparam.json', 'r') as hfile:
@@ -96,5 +98,5 @@ history = transformer.fit(
     )
 
 # Save last weights and hyperparameters.
-path_last = './weights/last/weights.ckpt'
+path_last = './weights/weights.ckpt'
 transformer.save_weights(path_last)

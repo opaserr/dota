@@ -32,20 +32,21 @@ def plot_beam(inputs, ground_truth, outputs, gamma_evaluation=False, slices=10,
     # Calculate maximum and minimum per column.
     min_input, max_input = np.min(inputs), np.max(inputs)
     min_output, max_output = np.min(outputs), np.max(outputs)
+    selected_slices = np.linspace(first_slice, first_slice+slices-1, slices, dtype='int')
     
-    for i in range(first_slice, first_slice+slices):
+    for i, sl in enumerate(selected_slices):
         # 1st column: input values
-        axs[i, 0].imshow(np.transpose(inputs[:,:,i]), aspect='auto',
+        axs[i, 0].imshow(np.transpose(inputs[:,:,sl]), aspect='auto',
                          cmap='gray', vmin=min_input, vmax=max_input)
         plt.sca(axs[i, 0])
         plt.yticks(fontsize=fontsize)
 
         # 2nd column: ground truth
-        axs[i, 1].imshow(np.transpose(ground_truth[:,:,i]), aspect='auto',
+        axs[i, 1].imshow(np.transpose(ground_truth[:,:,sl]), aspect='auto',
                          cmap='turbo',vmin=min_output, vmax=max_output)
 
         # 3rd column: model prediction
-        cbh = axs[i, 2].imshow(np.transpose(outputs[:,:,i]), aspect='auto', 
+        cbh = axs[i, 2].imshow(np.transpose(outputs[:,:,sl]), aspect='auto', 
                                cmap='turbo',vmin=min_output, vmax=max_output)
 
         # 4th column: difference or gamma analysis results
@@ -107,7 +108,7 @@ def plot_slice(inputs, ground_truth, outputs, scale, dose_threshold=1,
     cbh0 = axs[0].imshow(np.transpose(inputs[:,:,slice_number]), aspect='auto',
         cmap='gray', vmin=min_input, vmax=max_input)
     plt.sca(axs[0])
-    plt.yticks([31, 15, 1], ['2', '32', '64'], fontsize=fontsize)
+    plt.yticks([23, 12, 1], ['2', '24', '46'], fontsize=fontsize)
     plt.xticks([25, 50, 75, 100, 125, 150], ['50', '100', '150', '200', '250', '300'], fontsize=fontsize)
     axs[0].set_ylabel("mm", loc='top', fontsize=fontsize)
     axs[0].set_xlabel("mm", loc='right', fontsize=fontsize)
@@ -121,7 +122,7 @@ def plot_slice(inputs, ground_truth, outputs, scale, dose_threshold=1,
     cbh1 = axs[1].imshow(np.transpose(ground_truth[:,:,slice_number]), aspect='auto',
         cmap='turbo', alpha=0.6, vmin=min_output, vmax=max_output)
     plt.sca(axs[1])
-    plt.yticks([31, 15, 1], ['2', '32', '64'], fontsize=fontsize)
+    plt.yticks([23, 12, 1], ['2', '24', '46'], fontsize=fontsize)
     plt.xticks([25, 50, 75, 100, 125, 150], ['50', '100', '150', '200', '250', '300'], fontsize=fontsize)
     axs[1].set_ylabel("mm", loc='top', fontsize=fontsize)
     axs[1].set_xlabel("mm", loc='right', fontsize=fontsize)
@@ -135,7 +136,7 @@ def plot_slice(inputs, ground_truth, outputs, scale, dose_threshold=1,
     cbh2 = axs[2].imshow(np.transpose(outputs[:,:,slice_number]), aspect='auto', 
         cmap='turbo', alpha=0.6, vmin=min_output, vmax=max_output)
     plt.sca(axs[2])
-    plt.yticks([31, 15, 1], ['2', '32', '64'], fontsize=fontsize)
+    plt.yticks([23, 12, 1], ['2', '24', '46'], fontsize=fontsize)
     plt.xticks([25, 50, 75, 100, 125, 150], ['50', '100', '150', '200', '250', '300'], fontsize=fontsize)
     axs[2].set_ylabel("mm", loc='top', fontsize=fontsize)
     axs[2].set_xlabel("mm", loc='right', fontsize=fontsize)
@@ -155,7 +156,7 @@ def plot_slice(inputs, ground_truth, outputs, scale, dose_threshold=1,
     cbh3 = axs[3].imshow(np.transpose(np.absolute(gamma_values[:,:,slice_number])),
         aspect='auto', alpha=0.6, vmin=0, vmax=2, cmap='RdBu')
     plt.sca(axs[3])
-    plt.yticks([31, 15, 1], ['2', '32', '64'], fontsize=fontsize)
+    plt.yticks([23, 12, 1], ['2', '24', '46'], fontsize=fontsize)
     plt.xticks([25, 50, 75, 100, 125, 150], ['50', '100', '150', '200', '250', '300'], fontsize=fontsize)
     axs[3].set_ylabel("mm", loc='top', fontsize=fontsize)
     axs[3].set_xlabel("mm", loc='right', fontsize=fontsize)

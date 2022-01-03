@@ -6,12 +6,14 @@
 import h5py
 import json
 import numpy as np
-from ..src.models import dota_energies
-from ..src.preprocessing import DataRescaler
-from ..src.evaluation import gamma_analysis, error_analysis
+import sys
+sys.path.append('../src')
+from models import dota_energies
+from preprocessing import DataRescaler
+from evaluation import gamma_analysis, error_analysis
 
 # Load model and data hyperparameters
-with open('./hyperparam.json', 'r') as hfile:
+with open('../hyperparam.json', 'r') as hfile:
     param = json.load(hfile)
 
 # Prepare input data.
@@ -51,8 +53,7 @@ indexes_gamma, gamma_pass_rate, gamma_dist = gamma_analysis(
     filename=filename_test,
     scale=scale,
     num_sections=4,
-    cutoff=0,
-    energy=True
+    cutoff=0.1
 )
 np.savez('./eval/gamma_analysis.npz', indexes_gamma, gamma_pass_rate, gamma_dist)
 
@@ -63,7 +64,6 @@ indexes_error, errors, error_dist = error_analysis(
     filename=filename_test,
     scale=scale,
     num_sections=4,
-    cutoff=0,
-    energy=True
+    cutoff=0.1
 )
 np.savez('./eval/error_analysis.npz', indexes_error, errors, error_dist)

@@ -5,8 +5,10 @@
 ## Import libraries and define auxiliary functions
 import h5py
 import numpy as np
-from ..src.preprocessing import DataRescaler
-from ..src.evaluation import gamma_analysis, error_analysis
+import sys
+sys.path.append('../src')
+from preprocessing import DataRescaler
+from evaluation import gamma_analysis, error_analysis
 
 # Prepare input data.
 path = '../data/training/'
@@ -31,7 +33,7 @@ indexes_gamma, gamma_pass_rate, gamma_dist = gamma_analysis(
     filename=filename_test,
     scale=scale,
     num_sections=4,
-    energy=True,
+    cutoff=0.1,
     inference=False
 )
 np.savez('./eval/gamma_analysis_pba.npz', indexes_gamma, gamma_pass_rate, gamma_dist)
@@ -44,7 +46,6 @@ indexes_error, errors, error_dist = error_analysis(
     scale=scale,
     num_sections=4,
     cutoff=0.1,
-    energy=True,
     inference=False
 )
 np.savez('./eval/error_analysis_pba.npz', indexes_error, errors, error_dist)

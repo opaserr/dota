@@ -6,9 +6,11 @@
 import h5py
 import json
 import numpy as np
-from ..src.models import dota_energies
-from ..src.preprocessing import DataRescaler
-from ..src.evaluation import time_analysis
+import sys
+sys.path.append('../src')
+from models import dota_energies
+from preprocessing import DataRescaler
+from evaluation import time_analysis
 
 batch_size = 128
 
@@ -51,6 +53,6 @@ times = time_analysis(
     testIDs=testIDs,
     filename=filename_test,
     scale=scale,
-    energy=True
+    batch_size=batch_size
 )
 np.savez('./eval/time_analysis.npz', times)

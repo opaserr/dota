@@ -6,10 +6,9 @@ import math
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-#! pip install pymedphys
 from pymedphys import gamma
 
-def infer(model, ID, filename, scale, ikey='geometry', okey='dose'):
+def infer(model, ID, filename, scale, ikey='geometry', okey='dose', cutoff=0.5):
     """
     Get model prediction from test sample ID.
     """
@@ -23,10 +22,11 @@ def infer(model, ID, filename, scale, ikey='geometry', okey='dose'):
     # Predict dose distribution
     prediction = model.predict([inputs, np.expand_dims(energies, -1)])
     prediction = prediction * (scale['y_max']-scale['y_min']) + scale['y_min']
+    prediction[prediction<(cutoff/100)*scale['y_max']] = 0
 
     return np.squeeze(geometry), np.squeeze(prediction), np.squeeze(ground_truth)
 
-def from_file(filename, ID, gt_filename, scale, ikey='geometry', okey='dose'):
+def from_file(filename, ID, gt_filename, ikey='geometry', okey='dose'):
     """
     Load sample with ID from an alternative filename instead of
     using the model. Uses for comparison.
@@ -105,7 +105,7 @@ def gamma_analysis(model, testIDs, filename, scale, num_sections=1,
                 ikey, okey) 
         else:
             inputs, prediction, ground_truth = from_file(model, ID, filename,
-                scale, ikey, okey)
+                ikey, okey)
 
         # Cut off MC noise
         ground_truth[ground_truth<(cutoff/100)*scale['y_max']] = 0
@@ -115,8 +115,8 @@ def gamma_analysis(model, testIDs, filename, scale, num_sections=1,
         axes = (np.arange(ground_truth.shape[0])*resolution[0],
             np.arange(ground_truth.shape[1])*resolution[1],
             np.arange(ground_truth.shape[2])*resolution[2])
-        gamma_values = gamma(axes, ground_truth, axes, prediction, dose_threshold, distance_threshold,
-            lower_percent_dose_cutoff=0, global_normalisation=scale['y_max'], quiet=True)
+        gamma_values = gamma(axes, ground_truth, axes, prediction, dose_threshold,
+            distance_threshold, lower_percent_dose_cutoff=0, quiet=True)
         gamma_values = np.nan_to_num(gamma_values, 0)
 
         # Conservative estimate using only dose voxels
@@ -243,7 +243,7 @@ def time_analysis(model, testIDs, filename, scale, ikey='geometry', okey='dose',
 def progress_bar(iteration, total, prefix='', suffix='', decimals=1,
     length=50, fill='=', printEnd='\r'):
     """
-    Call in a loop to create terminal progress bar
+    Call within a loop to create terminal progress bar
     iteration.......current iteration
     total...........total number of iterations
     """

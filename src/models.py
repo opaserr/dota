@@ -3,7 +3,7 @@
 # COPYRIGHT: TU Delft, Netherlands. 2021.
 import numpy as np
 from tensorflow.keras import Sequential, layers, Model
-from .blocks import ConvEncoder, ConvDecoder, TransformerEncoder
+from blocks import ConvEncoder, ConvDecoder, TransformerEncoder
 
 def dota_energies(num_tokens, input_shape, projection_dim,
     num_heads, num_transformers, kernel_size, dropout_rate=0.2,
