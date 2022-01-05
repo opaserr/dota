@@ -55,11 +55,11 @@ def inference_time(model, IDs, filename, scale, batch_size, input_dim,
         with h5py.File(filename, 'r') as fh:
             inputs[i,] = np.expand_dims(np.transpose(fh[ikey][:,:,:,ID]), axis=(0,-1))
             inputs[i,] = (inputs[i,] - scale['x_min']) / (scale['x_max'] - scale['x_min'])
-            energies[i,] = (fh['energy'][ID] - scale['e_min']) / (scale['e_max'] - scale['e_min'])
+            energies[i,] = (fh['energy'+'0'][ID] - scale['e_min']) / (scale['e_max'] - scale['e_min'])
 
     # Predict dose distribution
     start = time.perf_counter()
-    prediction = model.predict([inputs, np.expand_dims(energies, -1)])
+    prediction = model.predict([inputs, np.expand_dims(energies, -1)], batch_size=batch_size)
     end = time.perf_counter()
 
     elapsed_time = end - start
@@ -234,7 +234,7 @@ def time_analysis(model, testIDs, filename, scale, ikey='geometry', okey='dose',
 
         # Get inference time.
         times[i,] = inference_time(model, IDs, filename, scale, batch_size,
-            input_dim, ikey, okey) 
+            input_dim, ikey) 
 
         progress_bar(i+1, num_batches, prefix="Progress:", suffix="Complete")
 

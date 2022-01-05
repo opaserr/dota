@@ -12,10 +12,10 @@ from models import dota_energies
 from preprocessing import DataRescaler
 from evaluation import time_analysis
 
-batch_size = 128
+batch_size = 8
 
 # Load model and data hyperparameters.
-with open('./hyperparam.json', 'r') as hfile:
+with open('../hyperparam.json', 'r') as hfile:
     param = json.load(hfile)
 
 # Prepare input data.

@@ -13,9 +13,9 @@ from evaluation import gamma_analysis
 start = time.perf_counter()
 
 # Load model and data hyperparameters
-patient = 1
+patient = 9
 num_beams = 2
-batch_size = 8
+batch_size = 16
 with open('../hyperparam.json', 'r') as hfile:
     param = json.load(hfile)
     
@@ -63,8 +63,10 @@ for b in range(num_beams):
         inputs[ind[i]:ind[i+1],:,:,:] = np.repeat(np.expand_dims(geometries[i], 0), num, axis=0)
 
     # Predict dose distribution
+    start_calc = time.perf_counter()
     outputs = np.squeeze(transformer.predict(
-        [np.expand_dims(inputs, -1), np.expand_dims(energies, -1)]))
+        [np.expand_dims(inputs, -1), np.expand_dims(energies, -1)], batch_size=batch_size))
+    stop_calc = time.perf_counter()
     outputs = outputs * (scale['y_max'] - scale['y_min']) + scale['y_min']
     outputs[outputs<0.1] = 0 # TODO: make cutoff variable
 
@@ -80,4 +82,5 @@ for b in range(num_beams):
     with h5py.File(path_outputs + str(b+1) + '_dota.h5', 'w') as fh:
         fh.create_dataset('dose', data=np.transpose(doses))
 
-print(time.perf_counter() - start)
+stop = time.perf_counter()
+print(stop - start, stop_calc - start_calc)
