@@ -33,7 +33,7 @@ def dota_energies(num_tokens, input_shape, projection_dim,
             num_tokens, 
             projection_dim,
             causal=causal,
-            dropout_rate = dropout_rate,
+            dropout_rate=dropout_rate,
         )(tokens)
 
     # Decode and upsample

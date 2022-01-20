@@ -57,11 +57,11 @@ def plot_beam(inputs, ground_truth, outputs, gamma_evaluation=False, slices=10,
             gamma_values = np.nan_to_num(gamma(
                 axes, ground_truth, axes, outputs, 1, 3,
                 lower_percent_dose_cutoff=gamma_cutoff, quiet=True), 0)
-            cbh2 = axs[i, 3].imshow(np.transpose(np.absolute(gamma_values[:,:,i])),
+            cbh2 = axs[i, 3].imshow(np.transpose(np.absolute(gamma_values[:,:,sl])),
                 aspect='auto', vmin=0, vmax=2, cmap='RdBu')
         else:
             axs[i, 3].imshow(np.transpose(np.absolute(
-                ground_truth[:,:,i]-outputs[:,:,i])),aspect='auto',
+                ground_truth[:,:,sl]-outputs[:,:,sl])),aspect='auto',
                 cmap='turbo',vmin=min_output, vmax=max_output)
     
     # Axes labels and colorbar
@@ -82,7 +82,7 @@ def plot_beam(inputs, ground_truth, outputs, gamma_evaluation=False, slices=10,
 
 def plot_slice(inputs, ground_truth, outputs, scale, dose_threshold=1,
     distance_threshold=3, cutoff=0, figsize=(5.5,7), fontsize=10,
-    resolution=[2,2,2], savefig=True):
+    resolution=[2,2,2], gamma_slice=True, savefig=True):
     """
     Plots slices of the full beam along the Z axis.
     *inputs..........3D array [Y,X,Z] from function infer
@@ -92,7 +92,10 @@ def plot_slice(inputs, ground_truth, outputs, scale, dose_threshold=1,
     axs[0].set_title("CT scan", fontsize=fontsize, fontweight='bold')
     axs[1].set_title("Target (MC)", fontsize=fontsize, fontweight='bold')
     axs[2].set_title("Predicted (model)", fontsize=fontsize, fontweight='bold')
-    axs[3].set_title("Gamma analysis", fontsize=fontsize, fontweight='bold')
+    if gamma_slice:
+        axs[3].set_title("Gamma analysis", fontsize=fontsize, fontweight='bold')
+    else:
+        axs[3].set_title("Dose difference", fontsize=fontsize, fontweight='bold')
     plt.subplots_adjust(hspace=0.5, wspace=0.05)
 
     # Cut off MC noise
@@ -145,23 +148,35 @@ def plot_slice(inputs, ground_truth, outputs, scale, dose_threshold=1,
     cb2.ax.tick_params(labelsize=fontsize)
 
     # 4th row: difference or gamma analysis results
-    axes = (np.arange(ground_truth.shape[0])*resolution[0],
-        np.arange(ground_truth.shape[1])*resolution[1],
-        np.arange(ground_truth.shape[2])*resolution[2])
-    gamma_values = np.nan_to_num(
-        gamma(axes, ground_truth, axes, outputs, dose_threshold,
-        distance_threshold, lower_percent_dose_cutoff=0.1, quiet=True), 0)
-    axs[3].imshow(np.transpose(inputs[:,:,slice_number]), aspect='auto',
-        cmap='gray', alpha=0.4, vmin=min_input, vmax=max_input)
-    cbh3 = axs[3].imshow(np.transpose(np.absolute(gamma_values[:,:,slice_number])),
-        aspect='auto', alpha=0.6, vmin=0, vmax=2, cmap='RdBu')
+    if gamma_slice:
+        axes = (np.arange(ground_truth.shape[0])*resolution[0],
+            np.arange(ground_truth.shape[1])*resolution[1],
+            np.arange(ground_truth.shape[2])*resolution[2])
+        gamma_values = np.nan_to_num(
+            gamma(axes, ground_truth, axes, outputs, dose_threshold,
+            distance_threshold, lower_percent_dose_cutoff=0.1, quiet=True), 0)
+        axs[3].imshow(np.transpose(inputs[:,:,slice_number]), aspect='auto',
+            cmap='gray', alpha=0.4, vmin=min_input, vmax=max_input)
+        cbh3 = axs[3].imshow(np.transpose(np.absolute(gamma_values[:,:,slice_number])),
+            aspect='auto', alpha=0.6, vmin=0, vmax=2, cmap='RdBu')
+
+    else:
+        axs[3].imshow(np.transpose(inputs[:,:,slice_number]), aspect='auto',
+            cmap='gray', alpha=0.4, vmin=min_input, vmax=max_input)
+        cbh3 = axs[3].imshow(np.transpose(np.absolute(
+            ground_truth[:,:,slice_number]-outputs[:,:,slice_number])),
+            aspect='auto', cmap='turbo', alpha=0.6, vmin=min_output, vmax=max_output)
+        
     plt.sca(axs[3])
     plt.yticks([23, 12, 1], ['2', '24', '46'], fontsize=fontsize)
     plt.xticks([25, 50, 75, 100, 125, 150], ['50', '100', '150', '200', '250', '300'], fontsize=fontsize)
     axs[3].set_ylabel("mm", loc='top', fontsize=fontsize)
     axs[3].set_xlabel("mm", loc='right', fontsize=fontsize)
     cb3 = fig.colorbar(cbh3, ax=axs[3], aspect=fontsize)
-    cb3.ax.set_ylabel(r"$\gamma$ value", size=fontsize)
+    if gamma_slice:
+        cb3.ax.set_ylabel(r"$\gamma$ value", size=fontsize)
+    else:
+        cb3.ax.set_ylabel(r"Gy/$10^9$ particles", size=fontsize)
     cb3.ax.tick_params(labelsize=fontsize)
         
     if savefig:

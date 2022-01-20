@@ -14,9 +14,9 @@ def infer(model, ID, filename, scale, ikey='geometry', okey='dose', cutoff=0.5):
     """
     # Load test sample input and ground truth
     with h5py.File(filename, 'r') as fh:
-        geometry = np.expand_dims(np.transpose(fh[ikey][:,:,:,ID]), axis=(0,-1))
+        geometry = np.expand_dims(np.transpose(fh[ikey][:-1,:-1,:,ID]), axis=(0,-1))
         inputs = (geometry - scale['x_min']) / (scale['x_max'] - scale['x_min'])
-        ground_truth = np.transpose(fh[okey+'0'][:,:,:,ID])
+        ground_truth = np.transpose(fh[okey+'0'][:-1,:-1,:,ID])
         energies = (fh['energy'+'0'][ID] - scale['e_min']) / (scale['e_max'] - scale['e_min'])
 
     # Predict dose distribution
@@ -33,12 +33,12 @@ def from_file(filename, ID, gt_filename, ikey='geometry', okey='dose'):
     """
     # Load test sample input and ground truth
     with h5py.File(gt_filename, 'r') as fh:
-        inputs = np.transpose(fh[ikey][:,:,:,ID])
-        ground_truth = np.transpose(fh[okey+'0'][:,:,:,ID])
+        inputs = np.transpose(fh[ikey][:-1,:-1,:,ID])
+        ground_truth = np.transpose(fh[okey+'0'][:-1,:-1,:,ID])
 
     # Load sample from alternative filename
     with h5py.File(filename, 'r') as fh:
-        prediction = np.transpose(fh[okey+'0'][:,:,:,ID])
+        prediction = np.transpose(fh[okey+'0'][:-1,:-1,:,ID])
 
     return np.squeeze(inputs), np.squeeze(prediction), np.squeeze(ground_truth)
 
@@ -53,7 +53,7 @@ def inference_time(model, IDs, filename, scale, batch_size, input_dim,
     for i, ID in enumerate(IDs):
         # Load test sample input and ground truth
         with h5py.File(filename, 'r') as fh:
-            inputs[i,] = np.expand_dims(np.transpose(fh[ikey][:,:,:,ID]), axis=(0,-1))
+            inputs[i,] = np.expand_dims(np.transpose(fh[ikey][:-1,:-1,:,ID]), axis=(0,-1))
             inputs[i,] = (inputs[i,] - scale['x_min']) / (scale['x_max'] - scale['x_min'])
             energies[i,] = (fh['energy'+'0'][ID] - scale['e_min']) / (scale['e_max'] - scale['e_min'])
 
