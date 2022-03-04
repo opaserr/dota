@@ -1,1 +1,9 @@
-{"num_slices": 150, "data_shape": [24, 24, 1], "num_tokens": 151, "kernel_size": 5, "num_heads": 16, "num_transformers": 1, "projection_dim": [6, 6, 12]}
+{
+"num_slices": 150, 
+"data_shape": [24, 24, 1], 
+"num_tokens": 151, 
+"kernel_size": 5, 
+"num_heads": 16, 
+"num_transformers": 1, 
+"projection_dim": [6, 6, 12]
+}

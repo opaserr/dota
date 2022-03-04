@@ -102,10 +102,10 @@ def gamma_analysis(model, testIDs, filename, scale, num_sections=1,
         # Get input, output, ground_truth triplet.
         if inference:
             inputs, prediction, ground_truth = infer(model, ID, filename, scale,
-                ikey, okey) 
+                ikey=ikey, okey=okey) 
         else:
             inputs, prediction, ground_truth = from_file(model, ID, filename,
-                ikey, okey)
+                ikey=ikey, okey=okey)
 
         # Cut off MC noise
         ground_truth[ground_truth<(cutoff/100)*scale['y_max']] = 0
@@ -160,6 +160,7 @@ def error_analysis(model, testIDs, filename, scale, num_sections=1,
     # Initialize auxiliary variables.
     errors = np.empty((2, len(testIDs)))
     error_dist = np.empty((len(testIDs), num_sections))
+    rmse = np.empty((len(testIDs), 1))
     num_IDs = len(testIDs)
 
     # Initial call to print 0% progress
@@ -170,11 +171,11 @@ def error_analysis(model, testIDs, filename, scale, num_sections=1,
 
         # Get input, output, ground_truth triplet.
         if inference:
-            inputs, prediction, ground_truth = infer(model, ID, filename, scale,
-                ikey, okey) 
+            inputs, prediction, ground_truth = infer(model, ID, filename, 
+                ikey=ikey, okey=okey) 
         else:
             inputs, prediction, ground_truth = from_file(model, ID, filename,
-                scale, ikey, okey)         
+                ikey=ikey, okey=okey)         
 
         # Cut off MC noise 
         ground_truth[ground_truth<(cutoff/100)*scale['y_max']] = 0
@@ -184,8 +185,11 @@ def error_analysis(model, testIDs, filename, scale, num_sections=1,
         absolute_error = np.absolute(prediction-ground_truth)
         errors[0,i] = absolute_error.mean()
 
-        # Store relative error.
+        # Store relative error
         errors[1,i] = 100 * errors[0,i] / np.amax(ground_truth) 
+
+        # Store root mean square error
+        rmse[i] = np.sqrt(((prediction - ground_truth) ** 2).mean())
 
         # Calculate average error per quadrant
         if num_sections > 1:
@@ -209,7 +213,7 @@ def error_analysis(model, testIDs, filename, scale, num_sections=1,
     # Sort list and indexes
     indexes = np.argsort(errors)
 
-    return indexes, errors, error_dist
+    return indexes, errors, error_dist, rmse
 
 def time_analysis(model, testIDs, filename, scale, ikey='geometry', okey='dose',
     batch_size=1):

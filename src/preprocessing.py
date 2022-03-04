@@ -42,7 +42,7 @@ class DataRescaler():
     def __load_values(self, key):
         # Read values from .txt file
         with open(self.path + 'minmax_' + key + '.txt', 'r') as f:
-                    min_value, max_value = eval(f.readline())
+            min_value, max_value = eval(f.readline())
 
         return min_value, max_value
 

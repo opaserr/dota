@@ -58,7 +58,7 @@ indexes_gamma, gamma_pass_rate, gamma_dist = gamma_analysis(
 np.savez('./eval/gamma_analysis.npz', indexes_gamma, gamma_pass_rate, gamma_dist)
 
 # Error evaluation.
-indexes_error, errors, error_dist = error_analysis(
+indexes_error, errors, error_dist, rmse = error_analysis(
     model=transformer,
     testIDs=testIDs,
     filename=filename_test,
@@ -66,4 +66,4 @@ indexes_error, errors, error_dist = error_analysis(
     num_sections=4,
     cutoff=0.1
 )
-np.savez('./eval/error_analysis.npz', indexes_error, errors, error_dist)
+np.savez('./eval/error_analysis.npz', indexes_error, errors, error_dist, rmse)
