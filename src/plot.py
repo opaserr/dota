@@ -180,6 +180,76 @@ def plot_slice(inputs, ground_truth, outputs, scale, dose_threshold=1,
     cb3.ax.tick_params(labelsize=fontsize)
         
     if savefig:
-        plt.savefig(time.strftime('%Y%m%d-%H%M%S'), dpi=300, bbox_inches='tight') 
+        plt.savefig(time.strftime('%Y%m%d-%H%M'), dpi=300, bbox_inches='tight') 
+
+    plt.show()
+
+def plot_coronal(inputs, ground_truth, outputs, scale, slice_number, n_slices=5,
+    cutoff=0, figsize=(15,8), fontsize=15, resolution=[2,2,2], savefig=True):
+    """
+    Plots slices of the full beam along the Z axis.
+    *inputs..........3D array [Y,X,Z] from function infer
+    """
+    # Initialize figure and axes.
+    fig, axs = plt.subplots(4, n_slices, figsize=figsize)
+    plt.subplots_adjust(hspace=0.05, wspace=0.05)
+
+    # Cut off MC noise
+    ground_truth[ground_truth<(cutoff/100)*scale['y_max']] = 0
+    outputs[outputs<(cutoff/100)*scale['y_max']] = 0
+
+    # Calculate maximum and minimum per column.
+    min_input, max_input = np.min(inputs), np.max(inputs)
+    min_output, max_output = np.min(outputs), np.max(outputs)
+
+    for i in range(n_slices):
+    
+        # 1st row: input values
+        cbh0 = axs[0,i].imshow(np.transpose(inputs[slice_number+i,:,:]),
+            aspect='equal', cmap='gray', vmin=min_input, vmax=max_input)
+        axs[0,i].set_xticklabels([])
+        axs[0,i].set_yticklabels([])
+        plt.sca(axs[0,i])
+        if i is n_slices-1:
+            cb0 = fig.colorbar(cbh0, ax=axs[0,], aspect=fontsize)
+            cb0.ax.set_ylabel("HU", size=fontsize)
+            cb0.ax.tick_params(labelsize=fontsize*0.75)
+        if i is 0:
+            axs[0,i].set_ylabel("CT scan", fontsize=fontsize)
+
+        # 2nd row: ground truth
+        cbh1 = axs[1,i].imshow(np.transpose(ground_truth[slice_number+i,:,:]),
+            aspect='equal', cmap='turbo', vmin=min_output, vmax=max_output)
+        plt.sca(axs[1,i])
+        axs[1,i].set_xticklabels([])
+        axs[1,i].set_yticklabels([])
+        if i is n_slices-1:
+            cb1 = fig.colorbar(cbh1, ax=axs[1:,], aspect=fontsize*2.5)
+            cb1.ax.set_ylabel(r"Gy/$10^9$ particles", size=fontsize)
+            cb1.ax.tick_params(labelsize=fontsize*0.75)
+        if i is 0:
+            axs[1,i].set_ylabel("MC dose", fontsize=fontsize)
+
+        # 3rd row: model prediction
+        cbh2 = axs[2,i].imshow(np.transpose(outputs[slice_number+i,:,:]), 
+            aspect='equal', cmap='turbo', vmin=min_output, vmax=max_output)
+        plt.sca(axs[2,i])
+        axs[2,i].set_xticklabels([])
+        axs[2,i].set_yticklabels([])
+        if i is 0:
+            axs[2,i].set_ylabel("Prediction", fontsize=fontsize)
+
+
+        # 4th row: dose difference 
+        cbh3 = axs[3,i].imshow(np.transpose(np.absolute(
+            ground_truth[slice_number+i,:,:]-outputs[slice_number+i,:,:])),
+            aspect='equal', cmap='turbo', vmin=min_output, vmax=max_output)
+        axs[3,i].set_xticklabels([])
+        axs[3,i].set_yticklabels([])
+        if i is 0:
+            axs[3,i].set_ylabel("Difference", fontsize=fontsize)
+        
+    if savefig:
+        plt.savefig(time.strftime('%Y%m%d-%H%M'), dpi=300, bbox_inches='tight') 
 
     plt.show()
