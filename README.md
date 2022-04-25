@@ -15,7 +15,7 @@ Pastor-Serrano, O., & Perkó, Z. (2021). Learning the Physics of Particle Transp
 <https://arxiv.org/abs/2109.03951>
 
 Pastor-Serrano, O., & Perkó, Z. (2022). Millisecond speed deep learning based proton dose calculation with Monte Carlo accuracy.
-<https://arxiv.org/abs/2202.02653>
+<https://doi.org/10.1088/1361-6560/ac692e>
 
 This project is supported by the following institutions:
 
