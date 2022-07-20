@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from pymedphys import gamma
 
 def plot_beam(inputs, ground_truth, outputs, gamma_evaluation=False, slices=10, 
-    figsize=(20,12), gamma_cutoff=0.1, fontsize=10, resolution=[2,2,2]):
+    figsize=(20,12), gamma_cutoff=0.1, fontsize=16, resolution=[2,2,2], savefig=False):
     """
     Plots slices of the full beam along the Z axis.
     *inputs..........3D array [Y,X,Z] from function infer
@@ -36,17 +36,17 @@ def plot_beam(inputs, ground_truth, outputs, gamma_evaluation=False, slices=10,
     
     for i, sl in enumerate(selected_slices):
         # 1st column: input values
-        axs[i, 0].imshow(np.transpose(inputs[:,:,sl]), aspect='auto',
+        axs[i, 0].imshow(np.transpose(inputs[:,sl,:]), aspect='auto',
                          cmap='gray', vmin=min_input, vmax=max_input)
         plt.sca(axs[i, 0])
-        plt.yticks(fontsize=fontsize)
+        plt.yticks(fontsize=0.75*fontsize)
 
         # 2nd column: ground truth
-        axs[i, 1].imshow(np.transpose(ground_truth[:,:,sl]), aspect='auto',
+        axs[i, 1].imshow(np.transpose(ground_truth[:,sl,:]), aspect='auto',
                          cmap='turbo',vmin=min_output, vmax=max_output)
 
         # 3rd column: model prediction
-        cbh = axs[i, 2].imshow(np.transpose(outputs[:,:,sl]), aspect='auto', 
+        cbh = axs[i, 2].imshow(np.transpose(outputs[:,sl,:]), aspect='auto', 
                                cmap='turbo',vmin=min_output, vmax=max_output)
 
         # 4th column: difference or gamma analysis results
@@ -61,15 +61,15 @@ def plot_beam(inputs, ground_truth, outputs, gamma_evaluation=False, slices=10,
                 aspect='auto', vmin=0, vmax=2, cmap='RdBu')
         else:
             axs[i, 3].imshow(np.transpose(np.absolute(
-                ground_truth[:,:,sl]-outputs[:,:,sl])),aspect='auto',
+                ground_truth[:,sl,:]-outputs[:,sl,:])),aspect='auto',
                 cmap='turbo',vmin=min_output, vmax=max_output)
     
     # Axes labels and colorbar
-    axs[7, 0].set_ylabel("X-axis values [mm]", fontsize=fontsize)
+    axs[5, 0].set_ylabel("X-axis values [mm]", fontsize=fontsize)
     fig.text(0.435, 0.08, "Depth Y-axis values [mm]", ha='center', fontsize=fontsize)
     for j in range(num_cols):
         plt.sca(axs[i, j])
-        plt.xticks(fontsize=fontsize)
+        plt.xticks(fontsize=fontsize*0.75)
     plt.subplots_adjust(hspace=0, wspace=0.05)
     cb = fig.colorbar(cbh, ax=axs, location='right')
     cb.ax.set_ylabel("[Gy/MU]", size=fontsize)
@@ -78,6 +78,10 @@ def plot_beam(inputs, ground_truth, outputs, gamma_evaluation=False, slices=10,
         cb2 = fig.colorbar(cbh2, ax=axs, location='right')
         cb2.ax.set_ylabel("Gamma value", size=fontsize)
         cb2.ax.tick_params(labelsize=fontsize)
+
+    if savefig:
+        plt.savefig(time.strftime('%Y%m%d-%H%M-b'), dpi=300, bbox_inches='tight') 
+
     plt.show()
 
 def plot_slice(inputs, ground_truth, outputs, scale, dose_threshold=1,
