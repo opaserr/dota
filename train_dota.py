@@ -10,8 +10,7 @@ import sys
 sys.path.append('./src')
 import numpy as np
 from generators import DataGenerator
-from models import dota_energies
-from preprocessing import DataRescaler
+from models import dota_residual, dota_photons
 from tensorflow_addons.optimizers import LAMB
 from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from tensorflow.config import list_physical_devices
@@ -19,8 +18,8 @@ print(list_physical_devices('GPU'))
 
 ## Define hyperparameters
 # Training parameters
-batch_size = 8
-num_epochs = 30
+batch_size = 4
+num_epochs = 120
 learning_rate = 0.001
 weight_decay = 0.0001
 
@@ -29,12 +28,10 @@ with open('./hyperparam.json', 'r') as hfile:
     param = json.load(hfile)
     
 # Load data files
-path = './data/training/'
+path = './data/'
 path_ckpt = './weights/ckpt/weights.ckpt'
-filename = path + 'train.h5'
 train_split = 0.90
-with h5py.File(filename, 'r') as fh:
-    listIDs = [*range(fh['geometry'].shape[-1])]
+listIDs = [*range(1700)]
 
 # Training, validation, test split.
 random.seed(333)
@@ -43,31 +40,28 @@ trainIDs = listIDs[:int(round(train_split*len(listIDs)))]
 valIDs = listIDs[int(round(train_split*len(listIDs))):]
     
 # Calculate or load normalization constants.
-scaler = DataRescaler(path, filename=filename)
-scaler.load(inputs=True, outputs=True)
-scale = {'y_min':scaler.y_min, 'y_max':scaler.y_max,
-        'x_min':scaler.x_min, 'x_max':scaler.x_max,
-        'e_min':70, 'e_max':220}
+scale = {'y_min':0, 'y_max':3.0755550861358643,
+        'r_min':0, 'r_max':3.0755550861358643,
+        'x_min':0, 'x_max':4.071000099182129}
 
 # Initialize generators.
-train_gen = DataGenerator(trainIDs, batch_size, filename, scale, num_energies=2)
-val_gen = DataGenerator(valIDs, batch_size, filename, scale, num_energies=1)
+train_gen = DataGenerator(path, trainIDs, batch_size, scale)
+val_gen = DataGenerator(path, valIDs, batch_size, scale)
 
 ## Define and train the transformer.
-transformer = dota_energies(
-    num_tokens=param['num_tokens'],
-    input_shape=param['data_shape'],
-    projection_dim=param['projection_dim'],
+transformer = dota_residual(
+    inshape=param['inshape'],
+    steps=param['num_levels'],
+    enc_feats=param['enc_feats'],
     num_heads=param['num_heads'],
-    num_transformers=param['num_transformers'], 
-    kernel_size=param['kernel_size'],
-    causal=True
+    num_transformers=param['num_transformers'],
+    kernel_size=param['kernel_size']
 )
 transformer.summary()
 
 # Load weights from checkpoint.
 random.seed()
-transformer.load_weights(path_ckpt)
+#transformer.load_weights(path_ckpt)
 
 # Compile the model.
 optimizer = LAMB(learning_rate=learning_rate, weight_decay_rate=weight_decay)
@@ -83,7 +77,7 @@ checkpoint = ModelCheckpoint(
     mode='min')
 
 # Learning rate scheduler. Manually reduce the learning rate.
-sel_epochs = [4,8,12,16,20,24,28]
+sel_epochs = [10,25,40,55,70,85,100,115]
 lr_scheduler = LearningRateScheduler(
     lambda epoch, lr: lr*0.5 if epoch in sel_epochs else lr,
     verbose=1)
@@ -93,7 +87,7 @@ history = transformer.fit(
     x=train_gen,
     validation_data=val_gen,
     epochs=num_epochs,
-    verbose=1,
+    verbose=2,
     callbacks=[checkpoint, lr_scheduler]
     )
 

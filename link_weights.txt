@@ -1,4 +1,0 @@
-The weights cannot be added to the repo due to Github's upload size limits.
-The final weights used in the paper are available at:
-
-https://www.dropbox.com/sh/je8hptkhf65ho3i/AABTDmlyrVkM5eT487DaIn1Fa?dl=0

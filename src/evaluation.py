@@ -8,58 +8,56 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pymedphys import gamma
 
-def infer(model, ID, filename, scale, ikey='geometry', okey='dose', cutoff=0.5):
+def infer(model, ID, path, scale, ikey='vol', okey='dose', rkey='ray', cutoff=0.5):
     """
     Get model prediction from test sample ID.
     """
     # Load test sample input and ground truth
-    with h5py.File(filename, 'r') as fh:
-        geometry = np.expand_dims(np.transpose(fh[ikey][:-1,:-1,:,ID]), axis=(0,-1))
-        inputs = (geometry - scale['x_min']) / (scale['x_max'] - scale['x_min'])
-        ground_truth = np.transpose(fh[okey+'0'][:-1,:-1,:,ID])
-        energies = (fh['energy'+'0'][ID] - scale['e_min']) / (scale['e_max'] - scale['e_min'])
+    geometry = np.expand_dims(np.load(path+str(ID)+'.npz')[ikey], axis=(0,-1))
+    ct_vol = (geometry - scale['x_min']) / (scale['x_max'] - scale['x_min'])
+    raytrace = np.expand_dims(np.load(path+str(ID)+'.npz')[rkey], axis=(0,-1))
+    ray_tr = (raytrace - scale['r_min']) / (scale['r_max'] - scale['r_min'])
+    ground_truth = np.load(path+str(ID)+'.npz')[okey]
 
     # Predict dose distribution
-    prediction = model.predict([inputs, np.expand_dims(energies, -1)])
+    prediction = model.predict([ct_vol, ray_tr])
     prediction = prediction * (scale['y_max']-scale['y_min']) + scale['y_min']
     prediction[prediction<(cutoff/100)*scale['y_max']] = 0
 
     return np.squeeze(geometry), np.squeeze(prediction), np.squeeze(ground_truth)
 
-def from_file(filename, ID, gt_filename, ikey='geometry', okey='dose'):
+def from_file(path, ID, gt_path, ikey='vol', okey='dose'):
     """
     Load sample with ID from an alternative filename instead of
     using the model. Uses for comparison.
     """
     # Load test sample input and ground truth
-    with h5py.File(gt_filename, 'r') as fh:
-        inputs = np.transpose(fh[ikey][:-1,:-1,:,ID])
-        ground_truth = np.transpose(fh[okey+'0'][:-1,:-1,:,ID])
+    inputs = np.load(gt_path+str(ID)+'.npz')[ikey], axis=(0,-1)
+    ground_truth = np.load(gt_path+str(ID)+'.npz')[okey], axis=(0,-1)
 
     # Load sample from alternative filename
-    with h5py.File(filename, 'r') as fh:
-        prediction = np.transpose(fh[okey+'0'][:-1,:-1,:,ID])
+    prediction = np.load(path+str(ID)+'.npz')[okey], axis=(0,-1)
 
     return np.squeeze(inputs), np.squeeze(prediction), np.squeeze(ground_truth)
 
-def inference_time(model, IDs, filename, scale, batch_size, input_dim,
-    ikey='geometry'):
+def inference_time(model, IDs, path, scale, batch_size, input_dim,
+    ikey='vol', rkey='ray'):
     """
     Get time elapsed to predict a dose distribution.
     """
-    inputs = np.empty((batch_size, *input_dim, 1))
-    energies = np.empty((batch_size))
+    ct_vol = np.empty((batch_size, *input_dim, 1))
+    ray_tr = np.empty((batch_size, *input_dim, 1))
 
     for i, ID in enumerate(IDs):
         # Load test sample input and ground truth
-        with h5py.File(filename, 'r') as fh:
-            inputs[i,] = np.expand_dims(np.transpose(fh[ikey][:-1,:-1,:,ID]), axis=(0,-1))
-            inputs[i,] = (inputs[i,] - scale['x_min']) / (scale['x_max'] - scale['x_min'])
-            energies[i,] = (fh['energy'+'0'][ID] - scale['e_min']) / (scale['e_max'] - scale['e_min'])
+        ct_vol[i,] = np.expand_dims(np.load(path+str(ID)+'.npz')[ikey], axis=(0,-1))
+        ct_vol[i,] = (ct_vol[i,] - scale['x_min']) / (scale['x_max'] - scale['x_min'])
+        ray_tr[i,] = np.expand_dims(np.load(path+str(ID)+'.npz')[rkey], axis=(0,-1))
+        ray_tr[i,] = (ray_tr[i,] - scale['r_min']) / (scale['r_max'] - scale['r_min'])
 
     # Predict dose distribution
     start = time.perf_counter()
-    prediction = model.predict([inputs, np.expand_dims(energies, -1)], batch_size=batch_size)
+    prediction = model.predict([ct_vol, ray_tr], batch_size=batch_size)
     end = time.perf_counter()
 
     elapsed_time = end - start
@@ -81,9 +79,9 @@ def estimate_range(ground_truth, percentile=5):
     # Return last index with values above 0.
     return max(np.where(ground_truth.any(axis=1))[0])
 
-def gamma_analysis(model, testIDs, filename, scale, num_sections=1,
+def gamma_analysis(model, testIDs, path, scale, num_sections=1,
     dose_threshold=1, distance_threshold=3, cutoff=0, resolution=[2,2,2],
-    ikey='geometry', okey='dose', inference=True):
+    ikey='vol', okey='dose', inference=True):
     """
     Performs a gamma analysis. Optionally calculates in which
     part of the beam (quadrant) the failed voxels are.
@@ -101,10 +99,10 @@ def gamma_analysis(model, testIDs, filename, scale, num_sections=1,
 
         # Get input, output, ground_truth triplet.
         if inference:
-            inputs, prediction, ground_truth = infer(model, ID, filename, scale,
+            inputs, prediction, ground_truth = infer(model, ID, path, scale,
                 ikey=ikey, okey=okey) 
         else:
-            inputs, prediction, ground_truth = from_file(model, ID, filename,
+            inputs, prediction, ground_truth = from_file(model, ID, path,
                 ikey=ikey, okey=okey)
 
         # Cut off MC noise
@@ -150,8 +148,8 @@ def gamma_analysis(model, testIDs, filename, scale, num_sections=1,
 
     return indexes, gamma_pass_rate, gamma_dist
 
-def error_analysis(model, testIDs, filename, scale, num_sections=1,
-    ikey='geometry', okey='dose', cutoff=0, inference=True):
+def error_analysis(model, testIDs, path, scale, num_sections=1,
+    ikey='vol', okey='dose', cutoff=0, inference=True):
     """
     Calculates the average error in the test set, and the sample with
     the highest error. Optionally calculates in which part of the beam 
@@ -171,10 +169,10 @@ def error_analysis(model, testIDs, filename, scale, num_sections=1,
 
         # Get input, output, ground_truth triplet.
         if inference:
-            inputs, prediction, ground_truth = infer(model, ID, filename, 
+            inputs, prediction, ground_truth = infer(model, ID, path, 
                 ikey=ikey, okey=okey) 
         else:
-            inputs, prediction, ground_truth = from_file(model, ID, filename,
+            inputs, prediction, ground_truth = from_file(model, ID, path,
                 ikey=ikey, okey=okey)         
 
         # Cut off MC noise 
@@ -215,7 +213,7 @@ def error_analysis(model, testIDs, filename, scale, num_sections=1,
 
     return indexes, errors, error_dist, rmse
 
-def time_analysis(model, testIDs, filename, scale, ikey='geometry', okey='dose',
+def time_analysis(model, testIDs, path, scale, ikey='vol', okey='dose',
     batch_size=1):
     """
     Calculates the inference time across the test dataset.
@@ -224,9 +222,7 @@ def time_analysis(model, testIDs, filename, scale, ikey='geometry', okey='dose',
     num_batches = math.floor(len(testIDs)/batch_size)
     times = np.empty((num_batches,))
 
-    # Get input/output dimensions
-    with h5py.File(filename, 'r') as fh:
-        input_dim = tuple(reversed(fh[ikey].shape[:-1]))
+    input_dim = tuple(np.load(self.path+'0.npz')[ikey].shape)
 
     # Initial call to print 0% progress
     progress_bar(0, num_batches, prefix="Progress:", suffix="Complete")
@@ -237,7 +233,7 @@ def time_analysis(model, testIDs, filename, scale, ikey='geometry', okey='dose',
         IDs = testIDs[i*batch_size:(i+1)*batch_size]
 
         # Get inference time.
-        times[i,] = inference_time(model, IDs, filename, scale, batch_size,
+        times[i,] = inference_time(model, IDs, path, scale, batch_size,
             input_dim, ikey) 
 
         progress_bar(i+1, num_batches, prefix="Progress:", suffix="Complete")

@@ -1,9 +1,8 @@
-{
-"num_slices": 150, 
-"data_shape": [24, 24, 1], 
-"num_tokens": 151, 
-"kernel_size": 5, 
-"num_heads": 16, 
-"num_transformers": 1, 
-"projection_dim": [6, 6, 12]
+{ 
+	"inshape": [96, 96, 64, 1], 
+	"kernel_size": 3, 
+	"num_heads": 4, 
+	"num_transformers": 1, 
+	"enc_feats": 10,
+	"num_levels": 4
 }
